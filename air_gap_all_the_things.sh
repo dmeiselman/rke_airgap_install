@@ -420,6 +420,35 @@ function validate () {
   kubectl get pods -A -o jsonpath="{.items[*].spec.containers[*].image}" | tr -s '[[:space:]]' '\n' |sort | uniq -c
 }
 
+
+#################################   update controller    ################################
+function update_control () {
+
+  #this is the function to update rke2 controller nodes
+  systemctl stop rke2-server.service
+  cd /opt/rancher
+  INSTALL_RKE2_ARTIFACT_PATH=/opt/rancher/rke2_"$RKE_VERSION" sh /opt/rancher/rke2_"$RKE_VERSION"/install.sh
+  yum remove -y rke2-common
+  yum install -y /opt/rancher/rke2_"$RKE_VERSION"/rke2-common-"$RKE_VERSION".rke2r1-0."$EL".x86_64.rpm /opt/rancher/rke2_"$RKE_VERSION"/rke2-selinux-0.17-1."$EL".noarch.rpm
+  systemctl start rke2-server.service
+
+}
+
+
+#################################   update worker    ################################
+function update_worker () {
+
+  #this is the function to update rke2 worker nodes
+  systemctl stop rke2-agent.service
+  cd /opt/rancher
+  INSTALL_RKE2_ARTIFACT_PATH=/opt/rancher/rke2_"$RKE_VERSION" INSTALL_RKE2_TYPE=agent sh /opt/rancher/rke2_"$RKE_VERSION"/install.sh
+  yum remove -y rke2-common
+  yum install -y /opt/rancher/rke2_"$RKE_VERSION"/rke2-common-"$RKE_VERSION".rke2r1-0."$EL".x86_64.rpm /opt/rancher/rke2_"$RKE_VERSION"/rke2-selinux-0.17-1."$EL".noarch.rpm
+  systemctl start rke2-agent.service
+
+}
+
+
 ############################# usage ################################
 function usage () {
   echo ""
@@ -458,6 +487,8 @@ function usage () {
 }
 
 case "$1" in
+        update_worker ) update_worker;;
+        update_control ) update_control;;
         build ) build;;
         control) deploy_control;;
         worker) deploy_worker;;
