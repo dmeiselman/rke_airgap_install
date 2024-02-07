@@ -150,7 +150,7 @@ function build () {
 
   echo "------------------------------------------------------------------"
   echo " to uncompress : "
-  echo "   yum install -y zstd"
+  echo "   -y zstd"
   echo "   mkdir /opt/rancher"
   echo "   tar -I zstd -vxf rke2_rancher_longhorn.zst -C /opt/rancher"
   echo "------------------------------------------------------------------"
@@ -215,7 +215,7 @@ EOF
 sysctl -p > /dev/null 2>&1
 
   echo install packages
-  yum install -y zstd nfs-utils iptables skopeo container-selinux iptables libnetfilter_conntrack libnfnetlink libnftnl policycoreutils-python-utils cryptsetup iscsi-initiator-utils
+  -y zstd nfs-utils iptables skopeo container-selinux iptables libnetfilter_conntrack libnfnetlink libnftnl policycoreutils-python-utils cryptsetup iscsi-initiator-utils
   systemctl enable --now iscsid
   echo -e "[keyfile]\nunmanaged-devices=interface-name:cali*;interface-name:flannel*" > /etc/NetworkManager/conf.d/rke2-canal.conf
 }
@@ -247,7 +247,7 @@ function deploy_control () {
 
  # insall rke2 - stig'd
   INSTALL_RKE2_ARTIFACT_PATH=/opt/rancher/rke2_"$RKE_VERSION" sh /opt/rancher/rke2_"$RKE_VERSION"/install.sh 
-  yum install -y /opt/rancher/rke2_"$RKE_VERSION"/rke2-common-"$RKE_VERSION".rke2r1-0."$EL".x86_64.rpm /opt/rancher/rke2_"$RKE_VERSION"/rke2-selinux-0.17-1."$EL".noarch.rpm
+  yum install --nogpg -y /opt/rancher/rke2_"$RKE_VERSION"/rke2-common-"$RKE_VERSION".rke2r1-0."$EL".x86_64.rpm /opt/rancher/rke2_"$RKE_VERSION"/rke2-selinux-0.17-1."$EL".noarch.rpm
   systemctl enable --now rke2-server.service
 
   sleep 30
@@ -366,7 +366,7 @@ function deploy_worker () {
   # install rke2
   cd /opt/rancher
   INSTALL_RKE2_ARTIFACT_PATH=/opt/rancher/rke2_"$RKE_VERSION" INSTALL_RKE2_TYPE=agent sh /opt/rancher/rke2_"$RKE_VERSION"/install.sh 
-  yum install -y /opt/rancher/rke2_"$RKE_VERSION"/rke2-common-"$RKE_VERSION".rke2r1-0."$EL".x86_64.rpm /opt/rancher/rke2_"$RKE_VERSION"/rke2-selinux-0.17-1."$EL".noarch.rpm
+  yum install --nogpg -y /opt/rancher/rke2_"$RKE_VERSION"/rke2-common-"$RKE_VERSION".rke2r1-0."$EL".x86_64.rpm /opt/rancher/rke2_"$RKE_VERSION"/rke2-selinux-0.17-1."$EL".noarch.rpm
 
   rsync -avP /opt/rancher/images/registry/registry.tar /var/lib/rancher/rke2/agent/images/
   
@@ -429,8 +429,12 @@ function update_control () {
   cd /opt/rancher
   yum remove -y rke2-common
   INSTALL_RKE2_ARTIFACT_PATH=/opt/rancher/rke2_"$RKE_VERSION" sh /opt/rancher/rke2_"$RKE_VERSION"/install.sh
-  yum install -y /opt/rancher/rke2_"$RKE_VERSION"/rke2-common-"$RKE_VERSION".rke2r1-0."$EL".x86_64.rpm /opt/rancher/rke2_"$RKE_VERSION"/rke2-selinux-0.17-1."$EL".noarch.rpm
+  yum install --nogpg -y /opt/rancher/rke2_"$RKE_VERSION"/rke2-common-"$RKE_VERSION".rke2r1-0."$EL".x86_64.rpm /opt/rancher/rke2_"$RKE_VERSION"/rke2-selinux-0.17-1."$EL".noarch.rpm
+  echo "Starting RKE2, this will take a few minutes."
   systemctl start rke2-server.service
+
+  #let's pull in the latest images, but only if /opt is writable.
+  
 
 }
 
@@ -443,7 +447,8 @@ function update_worker () {
   cd /opt/rancher
   yum remove -y rke2-common
   INSTALL_RKE2_ARTIFACT_PATH=/opt/rancher/rke2_"$RKE_VERSION" INSTALL_RKE2_TYPE=agent sh /opt/rancher/rke2_"$RKE_VERSION"/install.sh
-  yum install -y /opt/rancher/rke2_"$RKE_VERSION"/rke2-common-"$RKE_VERSION".rke2r1-0."$EL".x86_64.rpm /opt/rancher/rke2_"$RKE_VERSION"/rke2-selinux-0.17-1."$EL".noarch.rpm
+  yum install --nogpg -y /opt/rancher/rke2_"$RKE_VERSION"/rke2-common-"$RKE_VERSION".rke2r1-0."$EL".x86_64.rpm /opt/rancher/rke2_"$RKE_VERSION"/rke2-selinux-0.17-1."$EL".noarch.rpm
+  echo "Starting RKE2, this will take a few minutes."
   systemctl start rke2-agent.service
 
 }
